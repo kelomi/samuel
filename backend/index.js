@@ -1,37 +1,64 @@
-//importing express, environmental variables, bodyparser, router, database connection function and declaring them in a varibale to be using it in our index.js file
 const express = require('express');
 const dotenv = require('dotenv');
 const ConnectDB = require('./db/ConnectDB');
 const app = express();
 const router = require('./routes/DBOperRoutes');
 const bodyParser = require('body-parser');
-const cors = require("cors")
+const cors = require("cors");
 dotenv.config();
-//using the port in environmental variable or 3000
+
 const port = process.env.PORT || 3000;
 
-// middleware to parse incoming request in bodies
+// Middleware - FIXED CORS CONFIGURATION
+app.use(cors({
+  origin: 'http://localhost:5000', // Your frontend URL
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  credentials: true
+}));
 app.use(express.json());
 app.use(bodyParser.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(cors())
-// initialize the database connection pool
+
+// Initialize the database connection pool
 let pool;
 
 (async () => {
-    pool = await ConnectDB();
+    try {
+        pool = await ConnectDB();
+        console.log('✅ Database connected successfully');
 
-    // pass the pool to the routes
-    app.use((req, res, next) => {
-        req.pool = pool;
-        next();
-    });
+        // Pass the pool to the routes
+        app.use((req, res, next) => {
+            req.pool = pool;
+            next();
+        });
 
-    // use the router
-    app.use("/", router);
+        // Mount routes at /api
+        app.use("/api", router);
 
-    // start the server
-    app.listen(port, () => {
-        console.log(`Example app listening on port http://localhost:${port}`);
-    });
+        // Root endpoint
+        app.get('/', (req, res) => {
+            res.json({ message: 'Backend API is running!' });
+        });
+
+        // 404 handler for undefined routes
+        app.use('*', (req, res) => {
+            res.status(404).json({ error: 'Route not found' });
+        });
+
+        // Error handling middleware
+        app.use((err, req, res, next) => {
+            console.error('❌ Server error:', err);
+            res.status(500).json({ error: 'Internal server error' });
+        });
+
+        // Start the server
+        app.listen(port, () => {
+            console.log(`🚀 Server running on port http://localhost:${port}`);
+        });
+
+    } catch (error) {
+        console.error('❌ Failed to start server:', error);
+        process.exit(1);
+    }
 })();

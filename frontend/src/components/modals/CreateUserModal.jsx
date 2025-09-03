@@ -28,8 +28,8 @@ function CreateUserModal({ addUser }) {
     }
 
     try {
-      //post req to server
-      const res = await axios.post(import.meta.env.VITE_API_URL, {
+      // ✅ FIXED: Direct API URL instead of environment variable
+      const res = await axios.post('http://localhost:3000/api/', {
         name,
         email
       });
@@ -44,7 +44,13 @@ function CreateUserModal({ addUser }) {
     } catch (error) {
       //incase of error
       console.error("Error Creating User: ", error);
-      toast.error("Error Creating User");
+      
+      // Show specific error message from backend if available
+      if (error.response && error.response.data) {
+        toast.error(error.response.data);
+      } else {
+        toast.error("Error Creating User");
+      }
     }
   };
 

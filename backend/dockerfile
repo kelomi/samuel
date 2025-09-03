@@ -1,0 +1,46 @@
+# Stage 1: Build dependencies
+FROM node:18-alpine AS builder
+
+WORKDIR /usr/src/app
+
+# Copy package files first for better caching
+COPY package*.json ./
+
+# Install all dependencies including dev dependencies for build
+RUN npm install
+
+# Copy the rest of your backend source code
+COPY . .
+
+# Stage 2: Runtime image
+FROM node:18-alpine
+
+WORKDIR /usr/src/app
+
+# Copy package files
+COPY package*.json ./
+
+# Install production dependencies only
+RUN npm install --omit=dev
+
+# Copy built application from builder
+COPY --from=builder /usr/src/app .
+
+# Create non-root user for security (use different group name)
+RUN addgroup -g 1001 -S appgroup && \
+    adduser -S appuser -u 1001 -G appgroup
+
+# Change ownership of the app directory
+RUN chown -R appuser:appgroup /usr/src/app
+
+# Switch to non-root user
+USER appuser
+
+# Expose the port
+EXPOSE 3000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD node healthcheck.js || exit 1
+
+CMD ["node", "index.js"]
