@@ -21,10 +21,10 @@ function DeleteUserModal() {
       return;
     }
     try {
-      //delete req to the server with data payload
+      // ✅ FIXED: Direct API URL instead of environment variable
       const res = await axios.request({
         method: "delete",
-        url: import.meta.env.VITE_API_URL,
+        url: 'http://localhost:3000/api/',
         data: { id }
       });
 
@@ -44,7 +44,13 @@ function DeleteUserModal() {
     } catch (error) {
       //incase of error
       console.error("Error Deleting User", error);
-      toast.error("Error Deleting User");
+      
+      // Show specific error message from backend if available
+      if (error.response && error.response.data) {
+        toast.error(error.response.data);
+      } else {
+        toast.error("Error Deleting User");
+      }
     }
   };
 

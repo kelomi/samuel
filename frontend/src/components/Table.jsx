@@ -14,16 +14,11 @@ function Table() {
 
   //async await useEffect function for fetching data from server
   useEffect(() => {
-
-    if (!import.meta.env.VITE_API_URL) {
-      console.error("Missing VITE_API_URL in environment variables");
-      toast.error("Server configuration error");
-      return;
-    }
-
     const fetchUsers = async () => {
       try {
-        const response = await axios.get(import.meta.env.VITE_API_URL);
+        // ✅ FIXED: Use direct API URL instead of environment variable
+        const response = await axios.get('http://localhost:3000/api/');
+        
         //setting the empty array as a json object of users got from the server
         setUsers(response.data);
 
@@ -90,7 +85,6 @@ function Table() {
     </>
   );
 }
-
 
 //exporting the component to be using it in the app.jsx
 export default Table;

@@ -33,8 +33,8 @@ function EditUserModal() {
       return;
     }
     try {
-      //put req to server
-      const res = await axios.put(import.meta.env.VITE_API_URL, {
+      // ✅ FIXED: Direct API URL instead of environment variable
+      const res = await axios.put('http://localhost:3000/api/', {
         id,
         name,
         email
@@ -56,7 +56,13 @@ function EditUserModal() {
     } catch (error) {
       //incase of error
       console.error("Error Editing User", error);
-      toast.error("Error Editing User");
+      
+      // Show specific error message from backend if available
+      if (error.response && error.response.data) {
+        toast.error(error.response.data);
+      } else {
+        toast.error("Error Editing User");
+      }
     }
   };
 //using bootstrap pre built components
